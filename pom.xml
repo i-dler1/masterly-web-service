@@ -6,7 +6,7 @@
         <groupId>com.masterly</groupId>
         <artifactId>masterly-parent</artifactId>
         <version>1.0.0</version>
-        <relativePath>../masterly-web-service-main/pom.xml</relativePath>
+        <relativePath>../masterly-config-main/pom.xml</relativePath>
     </parent>
 
     <groupId>com.masterly</groupId>
@@ -22,7 +22,13 @@
     </properties>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
         <!-- Spring Boot Starters -->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
