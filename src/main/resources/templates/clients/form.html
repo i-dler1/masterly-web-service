@@ -1,0 +1,153 @@
+<!--<!DOCTYPE html>-->
+<!--<html xmlns:th="http://www.thymeleaf.org">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <title>Клиент - Masterly</title>-->
+<!--    <style>-->
+<!--        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }-->
+<!--        .container { background: white; padding: 20px; border-radius: 8px; max-width: 500px; margin: 0 auto; }-->
+<!--        h1 { color: #333; }-->
+<!--        label { display: block; margin-top: 10px; font-weight: bold; }-->
+<!--        input, textarea { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }-->
+<!--        button { margin-top: 20px; padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }-->
+<!--        button:hover { background-color: #0056b3; }-->
+<!--        .error { color: red; font-size: 12px; margin-top: 5px; display: none; }-->
+<!--        .error.visible { display: block; }-->
+<!--        .field-error { border-color: red; }-->
+<!--        .field-valid { border-color: green; }-->
+<!--        .nav { background: #333; padding: 10px; margin-bottom: 20px; border-radius: 8px; }-->
+<!--        .nav a { color: white; padding: 10px 15px; text-decoration: none; }-->
+<!--        .nav a:hover { background-color: #ddd; color: black; }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--<div class="nav">-->
+<!--    <a href="/clients">Клиенты</a>-->
+<!--    <a href="/services">Услуги</a>-->
+<!--    <a href="/materials">Материалы</a>-->
+<!--    <a href="/appointments">Записи</a>-->
+<!--    <a href="/profile">Профиль</a>-->
+<!--    <a href="/logout">Выйти</a>-->
+<!--</div>-->
+
+<!--<div class="container">-->
+<!--    <h1 th:text="${client.id} ? 'Редактировать клиента' : 'Новый клиент'">Новый клиент</h1>-->
+
+<!--    <form th:action="@{/clients/save}" th:object="${client}" method="post" id="clientForm">-->
+<!--        <input type="hidden" th:field="*{id}">-->
+
+<!--        <label for="fullName">Имя клиента *</label>-->
+<!--        <input type="text" th:field="*{fullName}" id="fullName" required>-->
+<!--        <div id="fullNameError" class="error">Имя должно содержать от 2 до 150 символов</div>-->
+
+<!--        <label for="phone">Телефон *</label>-->
+<!--        <input type="tel" th:field="*{phone}" id="phone" placeholder="+375XXXXXXXXX" required>-->
+<!--        <div id="phoneError" class="error">Телефон должен быть в формате +375XXXXXXXXX (9 цифр после +375)</div>-->
+<!--        <small>Формат: +375291234567</small>-->
+
+<!--        <label for="email">Email</label>-->
+<!--        <input type="email" th:field="*{email}" id="email">-->
+<!--        <div id="emailError" class="error">Введите корректный email адрес</div>-->
+
+<!--        <button type="submit">Сохранить</button>-->
+<!--        <a th:href="@{/clients}" style="margin-left: 10px;">Отмена</a>-->
+<!--    </form>-->
+<!--</div>-->
+
+<!--<script>-->
+<!--    // Получаем элементы формы-->
+<!--    const fullNameInput = document.getElementById('fullName');-->
+<!--    const phoneInput = document.getElementById('phone');-->
+<!--    const emailInput = document.getElementById('email');-->
+<!--    const form = document.getElementById('clientForm');-->
+
+<!--    // Элементы для ошибок-->
+<!--    const fullNameError = document.getElementById('fullNameError');-->
+<!--    const phoneError = document.getElementById('phoneError');-->
+<!--    const emailError = document.getElementById('emailError');-->
+
+<!--    // Валидация имени-->
+<!--    function validateFullName() {-->
+<!--        const value = fullNameInput.value.trim();-->
+<!--        if (value.length < 2 || value.length > 150) {-->
+<!--            fullNameInput.classList.add('field-error');-->
+<!--            fullNameInput.classList.remove('field-valid');-->
+<!--            fullNameError.classList.add('visible');-->
+<!--            return false;-->
+<!--        } else {-->
+<!--            fullNameInput.classList.remove('field-error');-->
+<!--            fullNameInput.classList.add('field-valid');-->
+<!--            fullNameError.classList.remove('visible');-->
+<!--            return true;-->
+<!--        }-->
+<!--    }-->
+
+<!--    // Валидация телефона-->
+<!--    function validatePhone() {-->
+<!--        const phoneRegex = /^\+375\d{9}$/;-->
+<!--        const value = phoneInput.value.trim();-->
+<!--        if (!phoneRegex.test(value) && value.length > 0) {-->
+<!--            phoneInput.classList.add('field-error');-->
+<!--            phoneInput.classList.remove('field-valid');-->
+<!--            phoneError.classList.add('visible');-->
+<!--            return false;-->
+<!--        } else if (value.length === 0) {-->
+<!--            phoneInput.classList.add('field-error');-->
+<!--            phoneInput.classList.remove('field-valid');-->
+<!--            phoneError.classList.add('visible');-->
+<!--            return false;-->
+<!--        } else {-->
+<!--            phoneInput.classList.remove('field-error');-->
+<!--            phoneInput.classList.add('field-valid');-->
+<!--            phoneError.classList.remove('visible');-->
+<!--            return true;-->
+<!--        }-->
+<!--    }-->
+
+<!--    // Валидация email-->
+<!--    function validateEmail() {-->
+<!--        const emailRegex = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;-->
+<!--        const value = emailInput.value.trim();-->
+<!--        if (value.length > 0 && !emailRegex.test(value)) {-->
+<!--            emailInput.classList.add('field-error');-->
+<!--            emailInput.classList.remove('field-valid');-->
+<!--            emailError.classList.add('visible');-->
+<!--            return false;-->
+<!--        } else {-->
+<!--            emailInput.classList.remove('field-error');-->
+<!--            if (value.length > 0) {-->
+<!--                emailInput.classList.add('field-valid');-->
+<!--            }-->
+<!--            emailError.classList.remove('visible');-->
+<!--            return true;-->
+<!--        }-->
+<!--    }-->
+
+<!--    // Валидация всей формы перед отправкой-->
+<!--    function validateForm(event) {-->
+<!--        const isFullNameValid = validateFullName();-->
+<!--        const isPhoneValid = validatePhone();-->
+<!--        const isEmailValid = validateEmail();-->
+
+<!--        if (!isFullNameValid || !isPhoneValid || !isEmailValid) {-->
+<!--            event.preventDefault();-->
+<!--            alert('Пожалуйста, исправьте ошибки в форме');-->
+<!--            return false;-->
+<!--        }-->
+<!--        return true;-->
+<!--    }-->
+
+<!--    // Добавляем валидацию на события-->
+<!--    fullNameInput.addEventListener('input', validateFullName);-->
+<!--    fullNameInput.addEventListener('blur', validateFullName);-->
+
+<!--    phoneInput.addEventListener('input', validatePhone);-->
+<!--    phoneInput.addEventListener('blur', validatePhone);-->
+
+<!--    emailInput.addEventListener('input', validateEmail);-->
+<!--    emailInput.addEventListener('blur', validateEmail);-->
+
+<!--    form.addEventListener('submit', validateForm);-->
+<!--</script>-->
+<!--</body>-->
+<!--</html>-->

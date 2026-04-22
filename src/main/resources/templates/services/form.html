@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Услуга - Masterly</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { background: white; padding: 20px; border-radius: 8px; max-width: 500px; margin: 0 auto; }
+        h1 { color: #333; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input, textarea { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { margin-top: 20px; padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .error { color: red; font-size: 12px; margin-top: 5px; display: none; }
+        .error.visible { display: block; }
+        .field-error { border-color: red; }
+        .field-valid { border-color: green; }
+        .nav { background: #333; padding: 10px; margin-bottom: 20px; border-radius: 8px; }
+        .nav a { color: white; padding: 10px 15px; text-decoration: none; }
+        .nav a:hover { background-color: #ddd; color: black; }
+    </style>
+</head>
+<body>
+<div class="nav">
+    <a href="/clients">Клиенты</a>
+    <a href="/services">Услуги</a>
+    <a href="/materials">Материалы</a>
+    <a href="/appointments">Записи</a>
+    <a href="/profile">Профиль</a>
+    <a href="/logout">Выйти</a>
+</div>
+
+<div class="container">
+    <h1 th:text="${service.id} ? 'Редактировать услугу' : 'Новая услуга'">Новая услуга</h1>
+
+    <form th:action="@{/services/save}" th:object="${service}" method="post" id="serviceForm">
+        <input type="hidden" th:field="*{id}">
+
+        <label for="name">Название услуги *</label>
+        <input type="text" th:field="*{name}" id="name" required>
+        <div id="nameError" class="error">Название должно содержать от 2 до 150 символов</div>
+
+        <label for="price">Цена (руб) *</label>
+        <input type="number" step="0.01" th:field="*{price}" id="price" required>
+        <div id="priceError" class="error">Цена должна быть больше 0</div>
+
+        <label for="durationMinutes">Длительность (мин) *</label>
+        <input type="number" th:field="*{durationMinutes}" id="durationMinutes" required>
+        <div id="durationError" class="error">Длительность должна быть от 5 до 480 минут</div>
+
+        <button type="submit">Сохранить</button>
+        <a th:href="@{/services}" style="margin-left: 10px;">Отмена</a>
+    </form>
+</div>
+
+<script>
+    const nameInput = document.getElementById('name');
+    const priceInput = document.getElementById('price');
+    const durationInput = document.getElementById('durationMinutes');
+    const form = document.getElementById('serviceForm');
+
+    const nameError = document.getElementById('nameError');
+    const priceError = document.getElementById('priceError');
+    const durationError = document.getElementById('durationError');
+
+    function validateName() {
+        const value = nameInput.value.trim();
+        if (value.length < 2 || value.length > 150) {
+            nameInput.classList.add('field-error');
+            nameInput.classList.remove('field-valid');
+            nameError.classList.add('visible');
+            return false;
+        } else {
+            nameInput.classList.remove('field-error');
+            nameInput.classList.add('field-valid');
+            nameError.classList.remove('visible');
+            return true;
+        }
+    }
+
+    function validatePrice() {
+        const value = parseFloat(priceInput.value);
+        if (isNaN(value) || value <= 0) {
+            priceInput.classList.add('field-error');
+            priceInput.classList.remove('field-valid');
+            priceError.classList.add('visible');
+            return false;
+        } else {
+            priceInput.classList.remove('field-error');
+            priceInput.classList.add('field-valid');
+            priceError.classList.remove('visible');
+            return true;
+        }
+    }
+
+    function validateDuration() {
+        const value = parseInt(durationInput.value);
+        if (isNaN(value) || value < 5 || value > 480) {
+            durationInput.classList.add('field-error');
+            durationInput.classList.remove('field-valid');
+            durationError.classList.add('visible');
+            return false;
+        } else {
+            durationInput.classList.remove('field-error');
+            durationInput.classList.add('field-valid');
+            durationError.classList.remove('visible');
+            return true;
+        }
+    }
+
+    function validateForm(event) {
+        const isNameValid = validateName();
+        const isPriceValid = validatePrice();
+        const isDurationValid = validateDuration();
+
+        if (!isNameValid || !isPriceValid || !isDurationValid) {
+            event.preventDefault();
+            alert('Пожалуйста, исправьте ошибки в форме');
+            return false;
+        }
+        return true;
+    }
+
+    nameInput.addEventListener('input', validateName);
+    nameInput.addEventListener('blur', validateName);
+
+    priceInput.addEventListener('input', validatePrice);
+    priceInput.addEventListener('blur', validatePrice);
+
+    durationInput.addEventListener('input', validateDuration);
+    durationInput.addEventListener('blur', validateDuration);
+
+    form.addEventListener('submit', validateForm);
+</script>
+</body>
+</html>

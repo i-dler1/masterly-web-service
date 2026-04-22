@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Запись к мастеру - Masterly</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }
+        .header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .nav { background: #333; overflow: hidden; border-radius: 8px; margin-bottom: 20px; }
+        .nav a { float: left; color: white; text-align: center; padding: 14px 16px; text-decoration: none; }
+        .nav a:hover { background-color: #ddd; color: black; }
+        .content { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
+        .logout-form button { padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .alert { padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+        .alert-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .btn-submit { background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 20px; }
+        .btn-submit:hover { background-color: #218838; }
+        .btn-back { background-color: #6c757d; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; display: inline-block; margin-top: 15px; }
+        .btn-back:hover { background-color: #5a626d; color: white; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { font-weight: bold; }
+        .form-group input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f8f9fa; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Masterly - Кабинет клиента</h1>
+    <form th:action="@{/logout}" method="post" class="logout-form">
+        <button type="submit">Выйти</button>
+    </form>
+</div>
+
+<div class="nav">
+    <a href="/client/dashboard">Главная</a>
+    <a href="/client/masters">Мастера</a>
+    <a href="/client/appointments">Мои записи</a>
+    <a href="/client/profile">Мой профиль</a>
+</div>
+
+<div class="content">
+    <h2>Запись к мастеру</h2>
+
+    <div class="alert alert-info">
+        <p><strong>Мастер:</strong> <span th:text="${master.fullName}"></span></p>
+        <p><strong>Услуга:</strong> <span th:text="${service.name}"></span></p>
+        <p><strong>Стоимость:</strong> <span th:text="${service.price}"></span> руб.</p>
+        <p><strong>Длительность:</strong> <span th:text="${service.durationMinutes}"></span> мин.</p>
+    </div>
+
+    <form id="bookingForm" method="post" th:action="@{/client/masters/{masterId}/book/{serviceId}(masterId=${master.id}, serviceId=${service.id})}">
+        <div class="form-group">
+            <label>Дата записи:</label>
+            <input type="text" id="selectedDateDisplay" class="form-control" readonly>
+            <input type="hidden" id="appointmentDate" name="appointmentDate">
+        </div>
+        <div class="form-group">
+            <label>Время записи:</label>
+            <input type="text" id="selectedTimeDisplay" class="form-control" readonly>
+            <input type="hidden" id="startTime" name="startTime">
+        </div>
+        <button type="submit" id="submitBtn" class="btn-submit" disabled>Подтвердить запись</button>
+    </form>
+
+    <a th:href="@{/client/masters/{masterId}/book/{serviceId}/calendar(masterId=${master.id}, serviceId=${service.id})}" class="btn-back">← Назад к календарю</a>
+</div>
+
+<script>
+    // Получаем параметры из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const date = urlParams.get('date');
+    const time = urlParams.get('time');
+
+    if (date) {
+        document.getElementById('selectedDateDisplay').value = date;
+        document.getElementById('appointmentDate').value = date;
+    }
+    if (time) {
+        document.getElementById('selectedTimeDisplay').value = time;
+        document.getElementById('startTime').value = time;
+        document.getElementById('submitBtn').disabled = false;
+    }
+</script>
+</body>
+</html>

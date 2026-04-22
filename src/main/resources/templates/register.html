@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация - Masterly</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .register-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 350px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .login-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .error {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .success {
+            color: green;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="register-container">
+    <h2>Регистрация в Masterly</h2>
+    <form th:action="@{/register}" method="post">
+        <div class="form-group">
+            <label for="role">Регистрация как </label>
+            <select id="role" name="role" required>
+                <option>Выберите роль</option>
+                <option value="MASTER">Мастер</option>
+                <option value="CLIENT">Клиент</option>
+<!--                <option value="ADMIN">Администратор</option>-->
+            </select>
+        </div>
+        <input type="text" name="fullName" placeholder="Полное имя" required autocomplete="off">
+        <input type="email" name="email" placeholder="Email" required autocomplete="off">
+        <input type="tel" name="phone" placeholder="Телефон" required autocomplete="off">
+        <input type="password" name="password" placeholder="Пароль" required autocomplete="new-password">
+        <button type="submit">Зарегистрироваться</button>
+        <div th:if="${param.error}" class="error">
+            Ошибка регистрации. Email может быть уже занят.
+        </div>
+        <div th:if="${param.registered}" class="success">
+            Регистрация успешна! Теперь войдите в систему.
+        </div>
+    </form>
+    <div class="login-link">
+        <a href="/login">Уже есть аккаунт? Войти</a>
+    </div>
+</div>
+</body>
+</html>

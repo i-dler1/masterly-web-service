@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Выбор даты и времени - Masterly</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav {
+            background: #333;
+            overflow: hidden;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .nav a {
+            float: left;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+
+        .nav a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+        .content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .logout-form button {
+            padding: 8px 16px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .view-mode {
+            margin-bottom: 15px;
+        }
+
+        .view-mode a {
+            margin-right: 10px;
+            padding: 5px 10px;
+            text-decoration: none;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+
+        .view-mode a.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-nav a {
+            padding: 8px 16px;
+            text-decoration: none;
+            background: #007bff;
+            color: white;
+            border-radius: 4px;
+            margin: 0 5px;
+        }
+
+        .calendar-nav a:hover {
+            background: #0056b3;
+        }
+
+        .calendar-week, .calendar-month {
+            display: grid;
+            gap: 10px;
+        }
+
+        .calendar-week {
+            grid-template-columns: repeat(7, 1fr);
+        }
+
+        .calendar-month {
+            grid-template-columns: repeat(7, 1fr);
+        }
+
+        .calendar-day {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            min-height: 120px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calendar-day:hover {
+            background: #f0f8ff;
+            border-color: #007bff;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-month .calendar-day {
+            min-height: 100px;
+        }
+
+        .day-date {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .other-month {
+            opacity: 0.5;
+            background: #f9f9f9;
+        }
+
+        .calendar-day.today {
+            background-color: #badffa;
+            border-color: #0728ff;
+        }
+
+        .weekday-header {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .slot {
+            background: #e8f5e9;
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            border-left: 3px solid #4caf50;
+            transition: all 0.2s;
+        }
+
+        .slot:hover {
+            background: #c8e6c9;
+            transform: scale(1.02);
+        }
+
+        .slot-time {
+            font-weight: bold;
+            color: #2e7d32;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            border-radius: 8px;
+            width: 500px;
+            max-width: 90%;
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+        }
+
+        .close {
+            cursor: pointer;
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .time-slot {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .time-slot:hover {
+            background: #218838;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Masterly - Кабинет клиента</h1>
+    <form th:action="@{/logout}" method="post" class="logout-form">
+        <button type="submit">Выйти</button>
+    </form>
+</div>
+
+<div class="nav">
+    <a href="/client/dashboard">Главная</a>
+    <a href="/client/masters">Мастера</a>
+    <a href="/client/appointments">Мои записи</a>
+    <a href="/client/profile">Мой профиль</a>
+</div>
+
+<div class="content">
+    <div class="view-mode">
+        <a th:href="@{/client/masters/{masterId}/book/{serviceId}/calendar(masterId=${masterId}, serviceId=${serviceId}, date=${currentDate}, view='week')}"
+           th:class="${view == 'week'} ? 'active' : ''">Неделя</a>
+        <a th:href="@{/client/masters/{masterId}/book/{serviceId}/calendar(masterId=${masterId}, serviceId=${serviceId}, date=${currentDate}, view='month')}"
+           th:class="${view == 'month'} ? 'active' : ''">Месяц</a>
+    </div>
+
+    <div class="calendar-header">
+        <h1 th:text="${monthName + ' ' + year}"></h1>
+        <div class="calendar-nav">
+            <a th:href="@{/client/masters/{masterId}/book/{serviceId}/calendar(masterId=${masterId}, serviceId=${serviceId}, date=${view == 'week' ? currentDate.minusDays(7) : currentDate.minusMonths(1)}, view=${view})}">«
+                Предыдущий</a>
+            <a th:href="@{/client/masters/{masterId}/book/{serviceId}/calendar(masterId=${masterId}, serviceId=${serviceId}, date=${T(java.time.LocalDate).now()}, view=${view})}">Сегодня</a>
+            <a th:href="@{/client/masters/{masterId}/book/{serviceId}/calendar(masterId=${masterId}, serviceId=${serviceId}, date=${view == 'week' ? currentDate.plusDays(7) : currentDate.plusMonths(1)}, view=${view})}">Следующий
+                »</a>
+        </div>
+    </div>
+
+    <!-- Неделя -->
+    <div th:if="${view == 'week'}">
+        <div class="calendar-week">
+            <div class="weekday-header">Пн</div>
+            <div class="weekday-header">Вт</div>
+            <div class="weekday-header">Ср</div>
+            <div class="weekday-header">Чт</div>
+            <div class="weekday-header">Пт</div>
+            <div class="weekday-header">Сб</div>
+            <div class="weekday-header">Вс</div>
+        </div>
+        <div class="calendar-week">
+            <div th:each="dayOffset : ${#numbers.sequence(0, 6)}">
+                <div th:with="currentDay=${startDate.plusDays(dayOffset)}">
+                    <div class="calendar-day"
+                         th:classappend="${currentDay == today} ? 'today' : (${currentDay.month != currentDate.month} ? 'other-month' : '')">
+                        <div class="day-date"><span th:text="${currentDay.dayOfMonth}"></span></div>
+                        <div th:each="slot : ${slotsByDate[currentDay.toString()]}" th:if="${!slot.isBooked}"
+                             class="slot"
+                             th:data-slot-id="${slot.id}" th:data-date="${slot.slotDate}"
+                             th:data-start="${slot.startTime}" th:data-end="${slot.endTime}"
+                             onclick="bookSlot(this)">
+                            <div class="slot-time" th:text="${slot.startTime} + ' - ' + ${slot.endTime}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Месяц -->
+    <div th:if="${view == 'month'}">
+        <div class="calendar-week">
+            <div class="weekday-header">Пн</div>
+            <div class="weekday-header">Вт</div>
+            <div class="weekday-header">Ср</div>
+            <div class="weekday-header">Чт</div>
+            <div class="weekday-header">Пт</div>
+            <div class="weekday-header">Сб</div>
+            <div class="weekday-header">Вс</div>
+        </div>
+        <div class="calendar-month">
+            <div th:each="day : ${daysInRange}">
+                <div class="calendar-day" th:classappend="${day == today.toString()} ? 'today' : ''"
+                     th:attr="data-date=${day}"
+                     onclick="openTimeSlots(this.getAttribute('data-date'))">
+                    <div class="day-date">
+                        <span th:text="${day.substring(8,10)}"></span>
+                    </div>
+                    <!-- Отображение ЗАПИСЕЙ клиента (уже забронированных) -->
+                    <div th:each="app : ${appointments}"
+                         th:if="${app.appointmentDate == day}"
+                         class="appointment">
+                        <div class="appointment-time" th:text="${app.startTime}">10:00</div>
+                        <div class="appointment-service" th:text="${app.serviceName}">Услуга</div>
+                        <div style="font-size: 9px; color: #c62828;">🔴 Забронировано</div>
+                    </div>
+                    <!-- Отображение свободных слотов -->
+                    <div th:each="slot : ${slotsByDate.get(day)}"
+                         th:if="${!slot.isBooked}"
+                         class="slot"
+                         th:data-slot-id="${slot.id}"
+                         th:data-date="${slot.slotDate}"
+                         th:data-start="${slot.startTime}"
+                         th:data-end="${slot.endTime}"
+                         onclick="event.stopPropagation(); bookSlot(this)">
+                        <div class="slot-time" th:text="${slot.startTime} + ' - ' + ${slot.endTime}"></div>
+                        <div style="font-size: 9px; color: #2e7d32;">🟢 Свободен</div>
+                    </div>
+                    <div th:if="${slotsByDate.get(day) == null or #lists.isEmpty(slotsByDate.get(day))}"
+                         style="font-size: 10px; color: #999; text-align: center; margin-top: 20px;">
+                        Нет слотов
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const masterId = [[${masterId}]];
+        const serviceId = [[${serviceId}]];
+
+        function bookSlot(element) {
+            const slotId = element.getAttribute('data-slot-id');
+            const date = element.getAttribute('data-date');
+            const startTime = element.getAttribute('data-start');
+
+            if (confirm(`Записаться на ${date} в ${startTime}?`)) {
+                window.location.href = `/client/appointments/create?masterId=${masterId}&serviceId=${serviceId}&slotId=${slotId}&date=${date}&startTime=${startTime}`;
+            }
+        }
+    </script>
+</body>
+</html>

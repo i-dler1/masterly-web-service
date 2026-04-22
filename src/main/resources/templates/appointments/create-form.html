@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Запись к мастеру - Masterly</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }
+        .header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .nav { background: #333; overflow: hidden; border-radius: 8px; margin-bottom: 20px; }
+        .nav a { float: left; color: white; text-align: center; padding: 14px 16px; text-decoration: none; }
+        .nav a:hover { background-color: #ddd; color: black; }
+        .content { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .logout-form button { padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .btn-submit { background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-submit:hover { background-color: #218838; }
+        .btn-back { background-color: #6c757d; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; display: inline-block; }
+        .btn-back:hover { background-color: #5a6268; color: white; }
+        .info-card { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Masterly</h1>
+    <form th:action="@{/logout}" method="post" class="logout-form">
+        <button type="submit">Выйти</button>
+    </form>
+</div>
+
+<div class="nav">
+    <a href="/masters">Мастера</a>
+    <a href="/my-appointments">Мои записи</a>
+    <a href="/client/profile">Мой профиль</a>
+</div>
+
+<div class="content">
+    <h2>Запись к мастеру</h2>
+
+    <div class="info-card">
+        <h4 th:text="${master.fullName}">Имя мастера</h4>
+        <p><strong>Специализация:</strong> <span th:text="${master.specialization != null ? master.specialization : 'Не указана'}"></span></p>
+    </div>
+
+    <div class="info-card">
+        <p><strong>Клиент:</strong> <span th:text="${client.fullName}"></span></p>
+        <p><strong>Email:</strong> <span th:text="${client.email}"></span></p>
+        <p><strong>Телефон:</strong> <span th:text="${client.phone}"></span></p>
+    </div>
+
+    <form th:action="@{/appointments/create}" method="post">
+        <input type="hidden" th:field="*{appointment.masterId}" />
+        <input type="hidden" th:field="*{appointment.clientId}" />
+        <input type="hidden" id="startTime" name="startTime" />
+        <input type="hidden" id="endTime" name="endTime" />
+
+        <div class="form-group">
+            <label for="serviceId">Выберите услугу:</label>
+            <select id="serviceId" th:field="*{appointment.serviceId}" required>
+                <option value="">-- Выберите услугу --</option>
+                <option th:each="service : ${services}"
+                        th:value="${service.id}"
+                        th:text="${service.name} + ' (' + service.durationMinutes + ' мин, ' + service.price + ' руб.)'"
+                        th:selected="${service.id == appointment.serviceId}">
+                </option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="appointmentDate">Дата записи:</label>
+            <input type="date" id="appointmentDate" th:field="*{appointment.appointmentDate}"
+                   th:min="${T(java.time.LocalDate).now().plusDays(1)}" required />
+        </div>
+
+        <div class="form-group">
+            <label for="slotId">Выберите время:</label>
+            <select id="slotId" name="slotId" required class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <option value="">-- Сначала выберите дату --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="notes">Примечание:</label>
+            <textarea id="notes" th:field="*{appointment.notes}" rows="3"
+                      style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">Записаться</button>
+        <a href="/masters" class="btn-back" style="margin-left: 10px;">Отмена</a>
+    </form>
+</div>
+
+<script>
+    let currentSlots = [];
+
+    // Загрузка доступных слотов
+    async function loadSlots() {
+        const masterId = document.querySelector('input[name="appointment.masterId"]').value;
+        const serviceId = document.getElementById('serviceId').value;
+        const date = document.getElementById('appointmentDate').value;
+        const slotSelect = document.getElementById('slotId');
+
+        if (!masterId || !date) {
+            slotSelect.innerHTML = '<option value="">-- Выберите дату --</option>';
+            return;
+        }
+
+        slotSelect.innerHTML = '<option value="">Загрузка...</option>';
+
+        try {
+            let url = `/api/availability/slots?masterId=${masterId}&date=${date}`;
+            if (serviceId) {
+                url += `&serviceId=${serviceId}`;
+            }
+
+            const response = await fetch(url);
+            const slots = await response.json();
+            currentSlots = slots;
+
+            if (slots.length === 0) {
+                slotSelect.innerHTML = '<option value="">-- Нет свободных слотов на эту дату --</option>';
+                // Показываем сообщение под селектом
+                showSlotMessage('На выбранную дату нет свободного времени. Пожалуйста, выберите другую дату.', 'info');
+            } else {
+                hideSlotMessage();
+                slotSelect.innerHTML = '<option value="">-- Выберите время --</option>';
+                slots.forEach(slot => {
+                    const option = document.createElement('option');
+                    option.value = slot.id;
+                    option.textContent = `${slot.startTime.substring(0,5)} - ${slot.endTime.substring(0,5)}`;
+                    slotSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading slots:', error);
+            slotSelect.innerHTML = '<option value="">-- Ошибка загрузки слотов --</option>';
+            showSlotMessage('Ошибка загрузки доступного времени. Попробуйте позже.', 'error');
+        }
+    }
+
+    function showSlotMessage(msg, type) {
+        let messageDiv = document.getElementById('slot-message');
+        if (!messageDiv) {
+            messageDiv = document.createElement('div');
+            messageDiv.id = 'slot-message';
+            messageDiv.style.marginTop = '10px';
+            messageDiv.style.padding = '10px';
+            messageDiv.style.borderRadius = '4px';
+            const slotSelect = document.getElementById('slotId');
+            slotSelect.parentNode.insertBefore(messageDiv, slotSelect.nextSibling);
+        }
+        messageDiv.textContent = msg;
+        messageDiv.className = type === 'error' ? 'alert alert-danger' :
+            (type === 'info' ? 'alert alert-info' : 'alert alert-warning');
+    }
+
+    function hideSlotMessage() {
+        const messageDiv = document.getElementById('slot-message');
+        if (messageDiv) {
+            messageDiv.remove();
+        }
+    }
+
+    // При выборе слота заполняем скрытые поля
+    document.getElementById('slotId')?.addEventListener('change', function() {
+        const selectedSlot = currentSlots.find(s => s.id == this.value);
+        if (selectedSlot) {
+            document.getElementById('startTime').value = selectedSlot.startTime;
+            document.getElementById('endTime').value = selectedSlot.endTime;
+        } else {
+            document.getElementById('startTime').value = '';
+            document.getElementById('endTime').value = '';
+        }
+    });
+
+    // Слушатели изменений
+    document.getElementById('serviceId')?.addEventListener('change', loadSlots);
+    document.getElementById('appointmentDate')?.addEventListener('change', loadSlots);
+
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.getElementById('appointmentDate');
+        if (dateInput && dateInput.value) {
+            loadSlots();
+        }
+
+        const serviceSelect = document.getElementById('serviceId');
+        if (serviceSelect && serviceSelect.value) {
+            loadSlots();
+        }
+    });
+</script>
+</body>
+</html>

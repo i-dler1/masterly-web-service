@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Материал - Masterly</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { background: white; padding: 20px; border-radius: 8px; max-width: 500px; margin: 0 auto; }
+        h1 { color: #333; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input, textarea { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { margin-top: 20px; padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .error { color: red; font-size: 12px; margin-top: 5px; display: none; }
+        .error.visible { display: block; }
+        .field-error { border-color: red; }
+        .field-valid { border-color: green; }
+        .nav { background: #333; padding: 10px; margin-bottom: 20px; border-radius: 8px; }
+        .nav a { color: white; padding: 10px 15px; text-decoration: none; }
+        .nav a:hover { background-color: #ddd; color: black; }
+    </style>
+</head>
+<body>
+<div class="nav">
+    <a href="/clients">Клиенты</a>
+    <a href="/services">Услуги</a>
+    <a href="/materials">Материалы</a>
+    <a href="/appointments">Записи</a>
+    <a href="/profile">Профиль</a>
+    <a href="/logout">Выйти</a>
+</div>
+
+<div class="container">
+    <h1 th:text="${material.id} ? 'Редактировать материал' : 'Новый материал'">Новый материал</h1>
+
+    <form th:action="@{/materials/save}" th:object="${material}" method="post" id="materialForm">
+        <input type="hidden" th:field="*{id}">
+
+        <label for="name">Название материала *</label>
+        <input type="text" th:field="*{name}" id="name" required>
+        <div id="nameError" class="error">Название должно содержать от 2 до 150 символов</div>
+
+        <label for="pricePerUnit">Цена за единицу (руб) *</label>
+        <input type="number" step="0.01" th:field="*{pricePerUnit}" id="pricePerUnit" required>
+        <div id="priceError" class="error">Цена должна быть больше 0</div>
+
+        <label for="quantity">Количество *</label>
+        <input type="number" step="0.01" th:field="*{quantity}" id="quantity" required>
+        <div id="quantityError" class="error">Количество не может быть отрицательным</div>
+
+        <label for="unit">Единица измерения *</label>
+        <input type="text" th:field="*{unit}" id="unit" placeholder="шт, кг, мл" required>
+        <div id="unitError" class="error">Укажите единицу измерения (например: шт, кг, мл)</div>
+
+        <label for="minQuantity">Минимальный остаток</label>
+        <input type="number" step="0.01" th:field="*{minQuantity}" id="minQuantity">
+
+        <label for="supplier">Поставщик</label>
+        <input type="text" th:field="*{supplier}" id="supplier">
+
+        <button type="submit">Сохранить</button>
+        <a th:href="@{/materials}" style="margin-left: 10px;">Отмена</a>
+    </form>
+</div>
+
+<script>
+    const nameInput = document.getElementById('name');
+    const priceInput = document.getElementById('pricePerUnit');
+    const quantityInput = document.getElementById('quantity');
+    const unitInput = document.getElementById('unit');
+    const form = document.getElementById('materialForm');
+
+    const nameError = document.getElementById('nameError');
+    const priceError = document.getElementById('priceError');
+    const quantityError = document.getElementById('quantityError');
+    const unitError = document.getElementById('unitError');
+
+    function validateName() {
+        const value = nameInput.value.trim();
+        if (value.length < 2 || value.length > 150) {
+            nameInput.classList.add('field-error');
+            nameInput.classList.remove('field-valid');
+            nameError.classList.add('visible');
+            return false;
+        } else {
+            nameInput.classList.remove('field-error');
+            nameInput.classList.add('field-valid');
+            nameError.classList.remove('visible');
+            return true;
+        }
+    }
+
+    function validatePrice() {
+        const value = parseFloat(priceInput.value);
+        if (isNaN(value) || value <= 0) {
+            priceInput.classList.add('field-error');
+            priceInput.classList.remove('field-valid');
+            priceError.classList.add('visible');
+            return false;
+        } else {
+            priceInput.classList.remove('field-error');
+            priceInput.classList.add('field-valid');
+            priceError.classList.remove('visible');
+            return true;
+        }
+    }
+
+    function validateQuantity() {
+        const value = parseFloat(quantityInput.value);
+        if (isNaN(value) || value < 0) {
+            quantityInput.classList.add('field-error');
+            quantityInput.classList.remove('field-valid');
+            quantityError.classList.add('visible');
+            return false;
+        } else {
+            quantityInput.classList.remove('field-error');
+            quantityInput.classList.add('field-valid');
+            quantityError.classList.remove('visible');
+            return true;
+        }
+    }
+
+    function validateUnit() {
+        const value = unitInput.value.trim();
+        if (value.length === 0) {
+            unitInput.classList.add('field-error');
+            unitInput.classList.remove('field-valid');
+            unitError.classList.add('visible');
+            return false;
+        } else {
+            unitInput.classList.remove('field-error');
+            unitInput.classList.add('field-valid');
+            unitError.classList.remove('visible');
+            return true;
+        }
+    }
+
+    function validateForm(event) {
+        const isNameValid = validateName();
+        const isPriceValid = validatePrice();
+        const isQuantityValid = validateQuantity();
+        const isUnitValid = validateUnit();
+
+        if (!isNameValid || !isPriceValid || !isQuantityValid || !isUnitValid) {
+            event.preventDefault();
+            alert('Пожалуйста, исправьте ошибки в форме');
+            return false;
+        }
+        return true;
+    }
+
+    nameInput.addEventListener('input', validateName);
+    nameInput.addEventListener('blur', validateName);
+
+    priceInput.addEventListener('input', validatePrice);
+    priceInput.addEventListener('blur', validatePrice);
+
+    quantityInput.addEventListener('input', validateQuantity);
+    quantityInput.addEventListener('blur', validateQuantity);
+
+    unitInput.addEventListener('input', validateUnit);
+    unitInput.addEventListener('blur', validateUnit);
+
+    form.addEventListener('submit', validateForm);
+</script>
+</body>
+</html>

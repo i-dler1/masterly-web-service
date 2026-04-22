@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Календарь записей - Masterly</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { background: white; padding: 20px; border-radius: 8px; }
+        h1 { color: #333; }
+        .nav { background: #333; padding: 10px; margin-bottom: 20px; border-radius: 8px; }
+        .nav a { color: white; padding: 10px 15px; text-decoration: none; }
+        .nav a:hover { background-color: #ddd; color: black; }
+        .view-mode { margin-bottom: 15px; }
+        .view-mode a { margin-right: 10px; padding: 5px 10px; text-decoration: none; background: #f0f0f0; border-radius: 4px; }
+        .view-mode a.active { background: #007bff; color: white; }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .calendar-nav a {
+            padding: 8px 16px;
+            text-decoration: none;
+            background: #007bff;
+            color: white;
+            border-radius: 4px;
+            margin: 0 5px;
+        }
+        .calendar-nav a:hover {
+            background: #0056b3;
+        }
+        .calendar-week, .calendar-month {
+            display: grid;
+            gap: 10px;
+        }
+        .calendar-week {
+            grid-template-columns: repeat(7, 1fr);
+        }
+        .calendar-month {
+            grid-template-columns: repeat(7, 1fr);
+        }
+        .calendar-day {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            min-height: 120px;
+            padding: 10px;
+        }
+        .calendar-month .calendar-day {
+            min-height: 100px;
+        }
+        .day-header {
+            font-weight: bold;
+            text-align: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 8px;
+        }
+        .day-date {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .appointment {
+            background: #e3f2fd;
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .appointment:hover {
+            background: #bbdef5;
+        }
+        .appointment-time {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .appointment-client {
+            color: #333;
+        }
+        .no-appointments {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            padding: 10px 0;
+        }
+        .status-pending { border-left: 3px solid orange; }
+        .status-confirmed { border-left: 3px solid green; }
+        .status-completed { border-left: 3px solid blue; }
+        .status-cancelled { border-left: 3px solid red; opacity: 0.6; }
+        .weekday-header {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .other-month {
+            opacity: 0.5;
+            background: #f9f9f9;
+        }
+        .calendar-day.today {
+            background-color: #badffa;
+            border-color: #0728ff;
+        }
+    </style>
+</head>
+<body>
+<div class="nav">
+    <a href="/clients">Клиенты</a>
+    <a href="/services">Услуги</a>
+    <a href="/materials">Материалы</a>
+    <a href="/appointments">Записи</a>
+    <a href="/profile">Профиль</a>
+    <a href="/logout">Выйти</a>
+</div>
+
+<div class="container">
+    <div class="view-mode">
+        <a th:href="@{/appointments/calendar(date=${currentDate}, view='week')}" th:class="${view == 'week'} ? 'active' : ''">Неделя</a>
+        <a th:href="@{/appointments/calendar(date=${currentDate}, view='month')}" th:class="${view == 'month'} ? 'active' : ''">Месяц</a>
+    </div>
+
+    <div class="calendar-header">
+        <h1 th:text="${monthName + ' ' + year}">Март 2026</h1>
+        <div class="calendar-nav">
+            <a th:href="@{/appointments/calendar(date=${view == 'week' ? currentDate.minusDays(7) : currentDate.minusMonths(1)}, view=${view})}">« Предыдущий</a>
+            <a th:href="@{/appointments/calendar(date=${T(java.time.LocalDate).now()}, view=${view})}">Сегодня</a>
+            <a th:href="@{/appointments/calendar(date=${view == 'week' ? currentDate.plusDays(7) : currentDate.plusMonths(1)}, view=${view})}">Следующий »</a>
+        </div>
+    </div>
+
+    <!-- Шапка с днями недели -->
+    <div class="calendar-week" th:if="${view == 'week'}">
+        <div class="weekday-header">Понедельник</div>
+        <div class="weekday-header">Вторник</div>
+        <div class="weekday-header">Среда</div>
+        <div class="weekday-header">Четверг</div>
+        <div class="weekday-header">Пятница</div>
+        <div class="weekday-header">Суббота</div>
+        <div class="weekday-header">Воскресенье</div>
+    </div>
+
+    <!-- Неделя -->
+    <div class="calendar-week" th:if="${view == 'week'}">
+        <div th:each="dayOffset : ${#numbers.sequence(0, 6)}">
+            <div th:with="currentDay=${startDate.plusDays(dayOffset)}">
+                <div class="calendar-day" th:classappend="${currentDay == today} ? 'today' : ''">
+                    <div class="day-date">
+                        <span th:text="${currentDay}"></span>
+                    </div>
+                    <div th:each="app : ${appointments}"
+                         th:if="${app.appointmentDate == currentDay}"
+                         class="appointment"
+                         th:classappend="${'status-' + app.status?.toLowerCase()}">
+                        <div class="appointment-time" th:text="${app.startTime}">10:00</div>
+                        <div class="appointment-client" th:text="${app.clientName}">Клиент</div>
+                        <div class="appointment-service" th:text="${app.serviceName}">Услуга</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Месяц -->
+    <div th:if="${view == 'month'}">
+        <div class="calendar-week">
+            <div class="weekday-header">Пн</div>
+            <div class="weekday-header">Вт</div>
+            <div class="weekday-header">Ср</div>
+            <div class="weekday-header">Чт</div>
+            <div class="weekday-header">Пт</div>
+            <div class="weekday-header">Сб</div>
+            <div class="weekday-header">Вс</div>
+        </div>
+        <div class="calendar-month">
+            <div th:each="day : ${daysInRange}">
+                <div th:class="${day.month != currentDate.month} ? 'calendar-day other-month' : (${day == today} ? 'calendar-day today' : 'calendar-day')">
+                    <div class="day-date">
+                        <span th:text="${day.dayOfMonth}"></span>
+                    </div>
+                    <div th:each="app : ${appointments}"
+                         th:if="${app.appointmentDate == day}"
+                         class="appointment"
+                         th:classappend="${'status-' + app.status?.toLowerCase()}">
+                        <div class="appointment-time" th:text="${app.startTime}">10:00</div>
+                        <div class="appointment-client" th:text="${app.clientName}">Клиент</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Записи - Masterly</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { background: white; padding: 20px; border-radius: 8px; }
+        h1 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; cursor: pointer; }
+        .status-pending { color: orange; font-weight: bold; }
+        .status-confirmed { color: green; font-weight: bold; }
+        .status-completed { color: blue; font-weight: bold; }
+        .status-cancelled { color: red; font-weight: bold; }
+        .pagination { margin-top: 20px; display: flex; justify-content: center; gap: 10px; }
+        .pagination a { padding: 8px 12px; text-decoration: none; color: #007bff; border: 1px solid #ddd; border-radius: 4px; }
+        .pagination a:hover { background-color: #007bff; color: white; }
+        .pagination .active { background-color: #007bff; color: white; border-color: #007bff; }
+        .btn { display: inline-block; padding: 8px 16px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; margin-bottom: 20px; }
+        .nav { background: #333; padding: 10px; margin-bottom: 20px; border-radius: 8px; }
+        .nav a { color: white; padding: 10px 15px; text-decoration: none; }
+        .nav a:hover { background-color: #ddd; color: black; }
+        .view-mode { margin-bottom: 15px; }
+        .view-mode a { margin-right: 10px; padding: 5px 10px; text-decoration: none; background: #f0f0f0; border-radius: 4px; }
+        .view-mode a.active { background: #007bff; color: white; }
+        .edit-btn { color: #007bff; text-decoration: none; margin-right: 10px; }
+        .delete-btn { color: #dc3545; text-decoration: none; }
+        .status-buttons {
+            margin-bottom: 8px;
+        }
+        .status-btn {
+            display: inline-block;
+            padding: 4px 8px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            font-size: 12px;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .confirm-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        .confirm-btn:hover {
+            background-color: #218838;
+        }
+        .cancel-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        .cancel-btn:hover {
+            background-color: #c82333;
+        }
+        .complete-btn {
+            background-color: #17a2b8;
+            color: white;
+        }
+        .complete-btn:hover {
+            background-color: #138496;
+        }
+    </style>
+</head>
+<body>
+<div class="nav">
+    <a href="/clients">Клиенты</a>
+    <a href="/services">Услуги</a>
+    <a href="/materials">Материалы</a>
+    <a href="/appointments">Записи</a>
+    <a href="/profile">Профиль</a>
+    <a href="/logout">Выйти</a>
+</div>
+
+<div class="container">
+    <h1>Записи</h1>
+
+    <div class="view-mode">
+        <a href="/appointments" th:class="${view == 'list' ? 'active' : ''}">Таблица</a>
+        <a href="/appointments/calendar" th:class="${view == 'calendar' ? 'active' : ''}">Календарь</a>
+    </div>
+
+    <a href="/appointments/new" class="btn">Новая запись</a>
+
+    <table>
+        <thead>
+        <tr>
+            <th>
+                <a th:href="@{/appointments(page=${currentPage}, size=${size}, sortBy='id', sortDir=${reverseSortDir})}">
+                    ID
+                    <span th:if="${sortBy == 'id'}">
+                        <span th:if="${sortDir == 'asc'}">↑</span>
+                        <span th:if="${sortDir == 'desc'}">↓</span>
+                    </span>
+                </a>
+            </th>
+            <th>
+                <a th:href="@{/appointments(page=${currentPage}, size=${size}, sortBy='clientName', sortDir=${reverseSortDir})}">
+                    Клиент
+                    <span th:if="${sortBy == 'clientName'}">
+                        <span th:if="${sortDir == 'asc'}">↑</span>
+                        <span th:if="${sortDir == 'desc'}">↓</span>
+                    </span>
+                </a>
+            </th>
+            <th>
+                <a th:href="@{/appointments(page=${currentPage}, size=${size}, sortBy='serviceName', sortDir=${reverseSortDir})}">
+                    Услуга
+                    <span th:if="${sortBy == 'serviceName'}">
+                        <span th:if="${sortDir == 'asc'}">↑</span>
+                        <span th:if="${sortDir == 'desc'}">↓</span>
+                    </span>
+                </a>
+            </th>
+            <th>
+                <a th:href="@{/appointments(page=${currentPage}, size=${size}, sortBy='appointmentDate', sortDir=${reverseSortDir})}">
+                    Дата
+                    <span th:if="${sortBy == 'appointmentDate'}">
+                        <span th:if="${sortDir == 'asc'}">↑</span>
+                        <span th:if="${sortDir == 'desc'}">↓</span>
+                    </span>
+                </a>
+            </th>
+            <th>
+                <a th:href="@{/appointments(page=${currentPage}, size=${size}, sortBy='startTime', sortDir=${reverseSortDir})}">
+                    Время
+                    <span th:if="${sortBy == 'startTime'}">
+                        <span th:if="${sortDir == 'asc'}">↑</span>
+                        <span th:if="${sortDir == 'desc'}">↓</span>
+                    </span>
+                </a>
+            </th>
+            <th>
+                <a th:href="@{/appointments(page=${currentPage}, size=${size}, sortBy='status', sortDir=${reverseSortDir})}">
+                    Статус
+                    <span th:if="${sortBy == 'status'}">
+                        <span th:if="${sortDir == 'asc'}">↑</span>
+                        <span th:if="${sortDir == 'desc'}">↓</span>
+                    </span>
+                </a>
+            </th>
+            <th>Примечания</th>
+            <th>Действия</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="appointment : ${appointments}">
+            <td th:text="${appointment.id}">1</td>
+            <td th:text="${appointment.clientName}">Иван Иванов</td>
+            <td th:text="${appointment.serviceName}">Стрижка</td>
+            <td th:text="${appointment.appointmentDate}">2024-03-28</td>
+            <td th:text="${appointment.startTime}">10:00</td>
+            <td>
+                <span th:class="${'status-' + appointment.status?.toLowerCase()}">
+                    <span th:if="${appointment.status == 'PENDING'}">В ожидании</span>
+                    <span th:if="${appointment.status == 'CONFIRMED'}">Подтверждено</span>
+                    <span th:if="${appointment.status == 'COMPLETED'}">Выполнено</span>
+                    <span th:if="${appointment.status == 'CANCELLED'}">Отменено</span>
+                </span>
+            </td>
+            <td th:text="${appointment.notes}"> </td>
+            <td>
+                <div class="status-buttons">
+                    <a th:if="${appointment.status == 'PENDING'}"
+                       th:href="@{/appointments/status/{id}(id=${appointment.id}, status='CONFIRMED')}"
+                       class="status-btn confirm-btn"
+                       onclick="return confirm('Подтвердить запись?')">
+                        Подтвердить
+                    </a>
+                    <a th:if="${appointment.status == 'PENDING' or appointment.status == 'CONFIRMED'}"
+                       th:href="@{/appointments/status/{id}(id=${appointment.id}, status='CANCELLED')}"
+                       class="status-btn cancel-btn"
+                       onclick="return confirm('Отменить запись?')">
+                        Отменить
+                    </a>
+                    <a th:if="${appointment.status == 'CONFIRMED'}"
+                       th:href="@{/appointments/status/{id}(id=${appointment.id}, status='COMPLETED')}"
+                       class="status-btn complete-btn"
+                       onclick="return confirm('Отметить как выполненную?')">
+                        Выполнено
+                    </a>
+                </div>
+                <a th:href="@{/appointments/edit/{id}(id=${appointment.id})}" class="edit-btn">Редактировать</a>
+                <a th:href="@{/appointments/delete/{id}(id=${appointment.id})}" class="delete-btn" onclick="return confirm('Отменить запись?')">Удалить</a>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(appointments)}">
+            <td th:colspan="8" style="text-align: center;">Нет записей</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        <a th:if="${currentPage > 0}" th:href="@{/appointments(page=${currentPage - 1}, size=${size}, sortBy=${sortBy}, sortDir=${sortDir})}">« Предыдущая</a>
+
+        <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+           th:class="${i == currentPage} ? 'active' : ''"
+           th:href="@{/appointments(page=${i}, size=${size}, sortBy=${sortBy}, sortDir=${sortDir})}"
+           th:text="${i + 1}">1</a>
+
+        <a th:if="${currentPage + 1 < totalPages}" th:href="@{/appointments(page=${currentPage + 1}, size=${size}, sortBy=${sortBy}, sortDir=${sortDir})}">Следующая »</a>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <label>Показывать на странице:</label>
+        <select onchange="window.location.href=this.value">
+            <option th:selected="${size == 5}" th:value="@{/appointments(page=0, size=5, sortBy=${sortBy}, sortDir=${sortDir})}">5</option>
+            <option th:selected="${size == 10}" th:value="@{/appointments(page=0, size=10, sortBy=${sortBy}, sortDir=${sortDir})}">10</option>
+            <option th:selected="${size == 20}" th:value="@{/appointments(page=0, size=20, sortBy=${sortBy}, sortDir=${sortDir})}">20</option>
+            <option th:selected="${size == 50}" th:value="@{/appointments(page=0, size=50, sortBy=${sortBy}, sortDir=${sortDir})}">50</option>
+        </select>
+    </div>
+</div>
+</body>
+</html>
