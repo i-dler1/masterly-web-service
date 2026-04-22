@@ -6,7 +6,7 @@
         <groupId>com.masterly</groupId>
         <artifactId>masterly-parent</artifactId>
         <version>1.0.0</version>
-        <relativePath>../../masterly-web-service-main/masterly-web-service-main/pom.xml</relativePath>
+        <relativePath>../masterly-web-service-main/pom.xml</relativePath>
     </parent>
 
     <groupId>com.masterly</groupId>
